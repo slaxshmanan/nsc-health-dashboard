@@ -1,146 +1,137 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "../../components/Header";
-import data from "../data/virginiaHealthData.json";
+import { supabase } from "../lib/supabaseClient";
 
-type RecordType = {
-  city: string;
-  county: string;
-  categories: {
-    [key: string]: {
-      label: string;
-      value: string;
-    }[];
-  };
+type Metric = {
+  label: string;
+  value: string;
 };
 
-function normalize(text: string) {
-  return text
-    .toLowerCase()
-    .replace(" county", "")
-    .replace(" city", "")
-    .replace(/[^\w\s]/g, "")
-    .trim();
-}
+type CategoryMap = {
+  [key: string]: Metric[];
+};
+
+type HealthRecord = {
+  id: number;
+  city: string;
+  county: string;
+  latitude: number;
+  longitude: number;
+  categories: CategoryMap;
+  metrics: Metric[];
+};
 
 export default function SearchPage() {
+  const [data, setData] = useState<HealthRecord[]>([]);
   const [search, setSearch] = useState("");
-  const [result, setResult] = useState<RecordType | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = () => {
-    setHasSearched(true);
+  async function fetchData() {
+    const { data: healthData, error } = await supabase
+      .from("county_metrics")
+      .select("*")
+      .order("county", { ascending: true });
 
-    const query = normalize(search);
-
-    if (!query) {
-      setResult(null);
+    if (error) {
+      console.error("Supabase search error:", error);
       return;
     }
 
-    const found = (data as RecordType[]).find((item) => {
-      const city = normalize(item.city);
-      const county = normalize(item.county);
+    setData((healthData || []) as HealthRecord[]);
+  }
 
-      return (
-        city === query ||
-        county === query ||
-        city.includes(query) ||
-        county.includes(query)
-      );
-    });
+  useEffect(() => {
+    fetchData();
 
-    setResult(found || null);
-  };
+    const channel = supabase
+      .channel("search-live-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "county_metrics",
+        },
+        () => fetchData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const filteredData = data.filter((item) => {
+    const query = search.toLowerCase();
+
+    return (
+      item.city?.toLowerCase().includes(query) ||
+      item.county?.toLowerCase().includes(query) ||
+      item.metrics?.some(
+        (metric) =>
+          metric.label.toLowerCase().includes(query) ||
+          String(metric.value).toLowerCase().includes(query)
+      )
+    );
+  });
 
   return (
-    <>
+    <main className="min-h-screen bg-slate-50">
       <Header />
 
-      <main className="p-10 max-w-7xl mx-auto">
-        <section className="card p-8 mb-10">
-          <h1 className="text-4xl font-bold text-blue-900 mb-3">
-            Search Virginia City or County
-          </h1>
+      <section className="mx-auto max-w-5xl px-6 py-10">
+        <h1 className="mb-2 text-3xl font-bold text-slate-900">
+          Search Virginia Health Data
+        </h1>
 
-          <p className="text-gray-600 mb-8 text-lg">
-            Enter any Virginia locality to view healthcare access, chronic disease,
-            and social determinant metrics.
-          </p>
+        <p className="mb-6 text-slate-600">
+          Search by county, city, metric name, or value.
+        </p>
 
-          <div className="flex flex-col md:flex-row gap-4">
-            <input
-              type="text"
-              placeholder="Fairfax, Loudoun, Richmond, Norfolk..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setHasSearched(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSearch();
-              }}
-              className="border border-gray-300 p-4 rounded-xl w-full md:w-[500px] text-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
+        <input
+          type="text"
+          placeholder="Search Arlington, diabetes, obesity..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-8 w-full rounded-xl border bg-white px-4 py-3 shadow-sm outline-none"
+        />
 
-            <button
-              onClick={handleSearch}
-              className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-4 rounded-xl text-lg font-semibold transition"
+        <div className="grid gap-4">
+          {filteredData.map((item) => (
+            <div
+              key={item.id}
+              className="rounded-2xl border bg-white p-5 shadow-sm"
             >
-              Search
-            </button>
-          </div>
-        </section>
-
-        {result && (
-          <section className="space-y-8">
-            <div className="card p-8">
-              <p className="text-sm text-blue-700 font-semibold mb-2">
-                Virginia Locality Profile
-              </p>
-
-              <h2 className="text-4xl font-bold text-blue-900 mb-2">
-                {result.city}
+              <h2 className="text-xl font-semibold text-slate-900">
+                {item.county || item.city}
               </h2>
 
-              <p className="text-gray-600 text-lg">
-                County/City: {result.county}
+              <p className="mb-4 text-sm text-slate-500">
+                Latitude: {item.latitude} | Longitude: {item.longitude}
               </p>
+
+              {item.categories &&
+                Object.entries(item.categories).map(([category, metrics]) => (
+                  <div key={category} className="mb-4">
+                    <h3 className="font-semibold text-slate-800">
+                      {category}
+                    </h3>
+
+                    <ul className="mt-2 grid gap-1 text-sm text-slate-700">
+                      {metrics.map((metric, index) => (
+                        <li key={index}>
+                          <span className="font-medium">{metric.label}:</span>{" "}
+                          {metric.value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
             </div>
-
-            {Object.entries(result.categories).map(([category, metrics]) => (
-              <div key={category} className="card p-8">
-                <h3 className="text-2xl font-bold text-blue-900 mb-6">
-                  {category}
-                </h3>
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {metrics.map((metric, index) => (
-                    <div key={index} className="metric-card">
-                      <p className="text-sm font-medium text-gray-500">
-                        {metric.label}
-                      </p>
-
-                      <p className="text-3xl font-bold text-blue-900 mt-3">
-                        {metric.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {hasSearched && !result && (
-          <div className="card p-8">
-            <p className="text-red-600 text-lg font-semibold">
-              No Virginia locality found.
-            </p>
-          </div>
-        )}
-      </main>
-    </>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
