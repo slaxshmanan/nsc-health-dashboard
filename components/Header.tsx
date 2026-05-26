@@ -40,6 +40,9 @@ export default function Header() {
           <Link href="/visualizations" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
             NSC Communities Visualizations
           </Link>
+          <Link href="/congressional" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
+            Congressional Dashboard
+          </Link>
         </div>
       </nav>
     </header>
