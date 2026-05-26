@@ -32,7 +32,10 @@ export default function Header() {
             Home
           </Link>
           <Link href="/search" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
-            Search
+            County Metrics
+          </Link>
+           <Link href="/congressional" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
+            Congressional Dashboard
           </Link>
           <Link href="/map" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
             Map
@@ -40,8 +43,9 @@ export default function Header() {
           <Link href="/visualizations" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
             NSC Communities Visualizations
           </Link>
-          <Link href="/congressional" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
-            Congressional Dashboard
+        
+          <Link href="/ask" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
+            Ask NSC AI
           </Link>
         </div>
       </nav>
