@@ -36,7 +36,7 @@ export default function AskPage() {
     if (data.answer) {
       setAnswer(data.answer);
     } else {
-      setAnswer(data.error || "Something went wrong.");
+      setAnswer(data.details || data.error || "Something went wrong.");
     }
 
     setLoading(false);

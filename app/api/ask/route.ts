@@ -1,15 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-});
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 function scoreDocument(question: string, doc: any) {
   const q = question.toLowerCase();
   const text = `${doc.title} ${doc.content} ${doc.source_url}`.toLowerCase();
@@ -60,6 +51,30 @@ export async function POST(req: Request) {
       return Response.json({ error: "Question is required." }, { status: 400 });
     }
 
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!geminiKey) {
+      return Response.json(
+        { error: "Missing GEMINI_API_KEY." },
+        { status: 500 }
+      );
+    }
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return Response.json(
+        { error: "Missing Supabase server environment variables." },
+        { status: 500 }
+      );
+    }
+
+    const ai = new GoogleGenAI({
+      apiKey: geminiKey,
+    });
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
     const { data: docs, error } = await supabase
       .from("source_documents")
       .select("title, source_url, content");
@@ -77,7 +92,8 @@ export async function POST(req: Request) {
 
     const selectedDocs = rankedDocs.filter((doc) => doc.score > 0).slice(0, 6);
 
-    const finalDocs = selectedDocs.length > 0 ? selectedDocs : rankedDocs.slice(0, 5);
+    const finalDocs =
+      selectedDocs.length > 0 ? selectedDocs : rankedDocs.slice(0, 5);
 
     const sourceText = finalDocs
       .map(
