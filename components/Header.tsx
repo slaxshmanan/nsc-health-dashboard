@@ -1,25 +1,24 @@
 import Link from "next/link";
-import Image from "next/image";
+
+const NOTEBOOKLM_URL =
+  process.env.NEXT_PUBLIC_NOTEBOOKLM_URL || "https://notebooklm.google.com/";
 
 export default function Header() {
   return (
-    <header className="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
-      <nav className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
+    <header className="bg-white border-b border-slate-200">
+      <div className="mx-auto flex max-w-[1500px] items-center justify-between px-8 py-4">
         <Link href="/" className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100">
-            <Image
-              src="/nsc-logo.png"
-              alt="NOVA ScriptsCentral Logo"
-              width={48}
-              height={48}
-              className="object-contain"
-              priority
-            />
-          </div>
+          <img
+            src="/nsc-logo.png"
+            alt="NSC Logo"
+            className="h-14 w-14 object-contain"
+          />
 
           <div>
-            <h1 className="text-xl font-bold text-blue-950 leading-tight">
-              NSC Community Health Intelligence Dashboard
+            <h1 className="text-xl font-bold leading-tight text-[#0b1b4d]">
+              NSC Community Health Intelligence
+              <br />
+              Dashboard
             </h1>
             <p className="text-sm text-slate-500">
               Virginia Locality Health Insights
@@ -27,28 +26,45 @@ export default function Header() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Link href="/" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
+        <nav className="flex items-center gap-12 text-sm text-slate-700">
+          <Link href="/" className="hover:text-blue-600">
             Home
           </Link>
-          <Link href="/search" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
-            County Metrics
+
+          <Link href="/search" className="hover:text-blue-600">
+            County
+            <br />
+            Metrics
           </Link>
-           <Link href="/congressional" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
-            Congressional Dashboard
+
+          <Link href="/congressional" className="hover:text-blue-600">
+            Congressional
+            <br />
+            Dashboard
           </Link>
-          <Link href="/map" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
+
+          <Link href="/map" className="hover:text-blue-600">
             Map
           </Link>
-          <Link href="/visualizations" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
-            NSC Communities Visualizations
+
+          <Link href="/visualizations" className="hover:text-blue-600">
+            NSC Communities
+            <br />
+            Visualizations
           </Link>
-        
-          <Link href="/ask" className="px-4 py-2 rounded-xl hover:bg-blue-50 text-slate-700">
-            Ask NSC AI
-          </Link>
-        </div>
-      </nav>
+
+          <a
+            href={NOTEBOOKLM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-600"
+          >
+            Ask NSC
+            <br />
+            AI
+          </a>
+        </nav>
+      </div>
     </header>
   );
 }

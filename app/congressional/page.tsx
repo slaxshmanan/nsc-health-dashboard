@@ -45,9 +45,7 @@ export default function CongressionalPage() {
           schema: "public",
           table: "congressional_metrics",
         },
-        () => {
-          fetchData();
-        }
+        () => fetchData()
       )
       .subscribe();
 
@@ -57,20 +55,13 @@ export default function CongressionalPage() {
   }, []);
 
   const filteredData = data.filter((item) =>
-    (item.district || "")
-      .toLowerCase()
-      .includes(search.toLowerCase())
+    (item.district || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const metricKeys =
     data.length > 0
       ? Object.keys(data[0]).filter(
-          (key) =>
-            ![
-              "id",
-              "district",
-              "updated_at",
-            ].includes(key)
+          (key) => !["id", "district", "updated_at"].includes(key)
         )
       : [];
 

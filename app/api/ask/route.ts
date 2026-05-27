@@ -108,7 +108,7 @@ ${doc.content}
       .join("\n\n");
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: `
 You are the NSC Community Health Intelligence AI assistant.
 

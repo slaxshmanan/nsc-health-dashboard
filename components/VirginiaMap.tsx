@@ -2,10 +2,15 @@
 
 import dynamic from "next/dynamic";
 
-const Map = dynamic(() => import("./VirginiaMapClient"), {
+const VirginiaMapClient = dynamic(() => import("./VirginiaMapClient"), {
   ssr: false,
+  loading: () => (
+    <div className="flex h-[600px] w-full items-center justify-center bg-white">
+      Loading map...
+    </div>
+  ),
 });
 
 export default function VirginiaMap() {
-  return <Map />;
+  return <VirginiaMapClient />;
 }

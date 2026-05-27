@@ -18,9 +18,9 @@ type HealthRecord = {
   id: number;
   city: string;
   county: string;
-  latitude: number;
-  longitude: number;
-  categories: CategoryMap;
+  latitude: number | string | null;
+  longitude: number | string | null;
+  categories: CategoryMap | null;
   metrics: Metric[];
 };
 
@@ -46,26 +46,14 @@ export default function VirginiaMapClient() {
 
   useEffect(() => {
     fetchHealthData();
-
-    const channel = supabase
-      .channel("county-metrics-live")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "county_metrics",
-        },
-        () => {
-          fetchHealthData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
+
+  const validData = data.filter((item) => {
+    const lat = Number(item.latitude);
+    const lng = Number(item.longitude);
+
+    return Number.isFinite(lat) && Number.isFinite(lng);
+  });
 
   if (loading) {
     return (
@@ -80,14 +68,15 @@ export default function VirginiaMapClient() {
       center={[37.7, -78.5]}
       zoom={7}
       scrollWheelZoom={true}
-      className="h-[600px] w-full rounded-2xl border shadow-sm"
+      style={{ height: "600px", width: "100%" }}
+className="rounded-2xl border shadow-sm"
     >
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {data.map((item) => (
+      {validData.map((item) => (
         <CircleMarker
           key={item.id}
           center={[Number(item.latitude), Number(item.longitude)]}
